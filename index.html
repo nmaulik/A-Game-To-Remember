@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Game To Remember</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            padding: 40px;
+            text-align: center;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .game-menu {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .game-button {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 20px 30px;
+            font-size: 1.5em;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+            min-width: 200px;
+        }
+
+        .game-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 25px rgba(0,0,0,0.2);
+        }
+
+        .game-button.clock {
+            background: linear-gradient(45deg, #2196F3, #1976D2);
+        }
+
+        .game-area {
+            display: none;
+            margin-top: 30px;
+        }
+
+        /* Animal Matching Game Styles */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .card {
+            aspect-ratio: 1;
+            background: #f0f0f0;
+            border: 3px solid #ddd;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3em;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+
+        .card:hover {
+            transform: scale(1.05);
+            border-color: #4CAF50;
+        }
+
+        .card.flipped {
+            background: #e8f5e8;
+            border-color: #4CAF50;
+        }
+
+        .card.matched {
+            background: #c8e6c9;
+            border-color: #2e7d32;
+            cursor: default;
+            transform: scale(1.1);
+        }
+
+        .card.selected {
+            background: #bbdefb;
+            border-color: #1976d2;
+            transform: scale(1.05);
+        }
+
+        /* Memory Game Styles */
+        .memory-item {
+            width: 300px;
+            height: 300px;
+            margin: 20px auto;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            border: 5px solid #333;
+        }
+
+        .color-options {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+
+        .color-button {
+            width: 80px;
+            height: 80px;
+            border: 4px solid #333;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .color-button:hover {
+            transform: scale(1.1);
+            border-width: 6px;
+        }
+
+        .memory-countdown {
+            font-size: 3em;
+            color: #f44336;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        .memory-phase {
+            font-size: 1.5em;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        /* Prominent Start Round Button */
+        .start-round-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 30px 0;
+            padding: 20px;
+        }
+
+        .start-memory-round {
+            background: linear-gradient(45deg, #9C27B0, #7B1FA2);
+            color: white;
+            border: none;
+            padding: 25px 40px;
+            font-size: 1.8em;
+            font-weight: bold;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            box-shadow: 0 10px 25px rgba(156, 39, 176, 0.3);
+            position: relative;
+            overflow: hidden;
+            min-width: 250px;
+        }
+
+        .start-memory-round::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #E91E63, #9C27B0, #3F51B5, #2196F3);
+            border-radius: 22px;
+            z-index: -1;
+            animation: borderGlow 2s linear infinite;
+        }
+
+        .start-memory-round:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 15px 35px rgba(156, 39, 176, 0.4);
+        }
+
+        .start-memory-round:active {
+            transform: translateY(-2px) scale(1.02);
+        }
+
+        @keyframes borderGlow {
+            0%, 100% { background: linear-gradient(45deg, #E91E63, #9C27B0, #3F51B5, #2196F3); }
+            25% { background: linear-gradient(45deg, #9C27B0, #3F51B5, #2196F3, #E91E63); }
+            50% { background: linear-gradient(45deg, #3F51B5, #2196F3, #E91E63, #9C27B0); }
+            75% { background: linear-gradient(45deg, #2196F3, #E91E63, #9C27B0, #3F51B5); }
+        }
+
+        /* Clock Game Styles */
+        .clock-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: 20px auto;
+            border: 8px solid #333;
+            border-radius: 50%;
+            background: white;
+        }
+
+        .clock-face {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+        }
+
+        .hour-hand, .minute-hand {
+            position: absolute;
+            background: #333;
+            transform-origin: bottom center;
+            left: 50%;
+            bottom: 50%;
+        }
+
+        .hour-hand {
+            width: 6px;
+            height: 80px;
+            margin-left: -3px;
+            border-radius: 3px;
+        }
+
+        .minute-hand {
+            width: 4px;
+            height: 110px;
+            margin-left: -2px;
+            border-radius: 2px;
+        }
+
+        .center-dot {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 12px;
+            height: 12px;
+            background: #333;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .clock-numbers {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .number {
+            position: absolute;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .voice-controls {
+            margin: 20px 0;
+        }
+
+        .voice-button {
+            background: linear-gradient(45deg, #FF5722, #D84315);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .voice-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+
+        .voice-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .listening {
+            background: linear-gradient(45deg, #4CAF50, #45a049) !important;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .feedback {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: bold;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .feedback.correct {
+            background: #c8e6c9;
+            color: #2e7d32;
+        }
+
+        .feedback.incorrect {
+            background: #ffcdd2;
+            color: #c62828;
+        }
+
+        .feedback.neutral {
+            background: #f5f5f5;
+            color: #666;
+        }
+
+        .back-button {
+            background: linear-gradient(45deg, #9E9E9E, #757575);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1em;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .score {
+            font-size: 1.5em;
+            margin: 20px 0;
+            color: #333;
+        }
+
+        .game-completed {
+            background: #c8e6c9;
+            color: #2e7d32;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            font-size: 1.3em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>A Game To Remember</h1>
+        
+        <div id="menu" class="game-menu">
+            <button class="game-button" onclick="startAnimalGame()">
+                🐱 Match the Animals
+            </button>
+            <button class="game-button clock" onclick="startClockGame()">
+                🕐 What Time Is It?
+            </button>
+            <button class="game-button" onclick="startMemoryGame()" style="background: linear-gradient(45deg, #9C27B0, #7B1FA2);">
+                🧠 Do You Remember?
+            </button>
+        </div>
+
+        <!-- Animal Matching Game -->
+        <div id="animalGame" class="game-area">
+            <button class="back-button" onclick="showMenu()">← Back to Menu</button>
+            <h2>Match the Animals</h2>
+            <div class="score">Matches: <span id="matches">0</span> / 18</div>
+            <div class="grid" id="gameGrid"></div>
+            <div id="animalComplete" class="game-completed" style="display: none;">
+                🎉 Congratulations! You matched all the animals! 🎉
+                <br><br>
+                <button class="game-button" onclick="restartAnimalGame()">Play Again</button>
+            </div>
+        </div>
+
+        <!-- Clock Game -->
+        <div id="clockGame" class="game-area">
+            <button class="back-button" onclick="showMenu()">← Back to Menu</button>
+            <h2>What Time Is It?</h2>
+            <div class="score">Correct: <span id="clockScore">0</span></div>
+            
+            <div class="clock-container">
+                <div class="clock-face">
+                    <div class="clock-numbers">
+                        <div class="number" style="top: 10px; left: 50%; transform: translateX(-50%);">12</div>
+                        <div class="number" style="top: 50%; right: 10px; transform: translateY(-50%);">3</div>
+                        <div class="number" style="bottom: 10px; left: 50%; transform: translateX(-50%);">6</div>
+                        <div class="number" style="top: 50%; left: 10px; transform: translateY(-50%);">9</div>
+                    </div>
+                    <div class="hour-hand" id="hourHand"></div>
+                    <div class="minute-hand" id="minuteHand"></div>
+                    <div class="center-dot"></div>
+                </div>
+            </div>
+
+            <div class="voice-controls">
+                <button class="voice-button" id="voiceButton" onclick="startListening()">
+                    🎤 Say the Time
+                </button>
+                <button class="voice-button" onclick="generateNewTime()">
+                    ⏰ New Time
+                </button>
+            </div>
+
+            <div id="feedback" class="feedback neutral">
+                Look at the clock and say the time out loud!
+            </div>
+
+            <div id="currentTime" style="display: none;"></div>
+        </div>
+
+        <!-- Memory Game -->
+        <div id="memoryGame" class="game-area">
+            <button class="back-button" onclick="showMenu()">← Back to Menu</button>
+            <h2>Do You Remember?</h2>
+            <div class="score">Correct: <span id="memoryScore">0</span></div>
+            
+            <div id="memoryPhase" class="memory-phase">
+                Get ready! You'll see a colored square for 3 seconds.
+            </div>
+            
+            <div id="memoryCountdown" class="memory-countdown" style="display: none;"></div>
+            
+            <div id="memoryItem" class="memory-item" style="display: none;"></div>
+            
+            <div id="memoryQuestion" style="display: none;">
+                <h3>What color was the square?</h3>
+                <div class="color-options" id="colorOptions"></div>
+            </div>
+            
+            <div id="memoryFeedback" class="feedback neutral" style="display: none;"></div>
+            
+            <div class="start-round-container">
+                <button class="start-memory-round" id="startMemoryRound" onclick="startMemoryRound()">
+                    🚀 Start Round
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Animal Matching Game
+        const animals = ['🐱', '🐶', '🐰', '🐻', '🐼', '🦁', '🐯', '🐸', '🐵', '🐺', '🦊', '🐨', '🐷', '🐮', '🐭', '🐹', '🐔', '🐧'];
+        let cards = [];
+        let selectedCards = [];
+        let matchedPairs = 0;
+        let canSelect = true;
+
+        // Clock Game
+        let currentHour = 0;
+        let currentMinute = 0;
+        let recognition;
+        let clockScore = 0;
+
+        // Memory Game
+        const colors = [
+            { name: 'Red', hex: '#f44336' },
+            { name: 'Blue', hex: '#2196f3' },
+            { name: 'Green', hex: '#4caf50' },
+            { name: 'Yellow', hex: '#ffeb3b' },
+            { name: 'Purple', hex: '#9c27b0' },
+            { name: 'Orange', hex: '#ff9800' }
+        ];
+        let currentMemoryColor = null;
+        let memoryScore = 0;
+
+        function showMenu() {
+            document.getElementById('menu').style.display = 'flex';
+            document.getElementById('animalGame').style.display = 'none';
+            document.getElementById('clockGame').style.display = 'none';
+            document.getElementById('memoryGame').style.display = 'none';
+        }
+
+        function startAnimalGame() {
+            document.getElementById('menu').style.display = 'none';
+            document.getElementById('animalGame').style.display = 'block';
+            initAnimalGame();
+        }
+
+        function startMemoryGame() {
+            document.getElementById('menu').style.display = 'none';
+            document.getElementById('memoryGame').style.display = 'block';
+            initMemoryGame();
+        }
+
+        function startClockGame() {
+            document.getElementById('menu').style.display = 'none';
+            document.getElementById('clockGame').style.display = 'block';
+            initClockGame();
+        }
+
+        function initAnimalGame() {
+            matchedPairs = 0;
+            document.getElementById('matches').textContent = '0';
+            document.getElementById('animalComplete').style.display = 'none';
+            
+            // Create pairs of animals
+            cards = [];
+            animals.forEach(animal => {
+                cards.push(animal, animal);
+            });
+            
+            // Shuffle cards
+            for (let i = cards.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [cards[i], cards[j]] = [cards[j], cards[i]];
+            }
+            
+            // Create grid
+            const grid = document.getElementById('gameGrid');
+            grid.innerHTML = '';
+            
+            cards.forEach((animal, index) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.textContent = animal; // Always show the emoji
+                card.dataset.animal = animal;
+                card.dataset.index = index;
+                card.addEventListener('click', selectCard);
+                grid.appendChild(card);
+            });
+        }
+
+        function selectCard(event) {
+            if (!canSelect) return;
+            
+            const card = event.target;
+            if (card.classList.contains('matched') || card.classList.contains('selected')) return;
+            
+            // Clear previous selections if starting fresh
+            if (selectedCards.length === 0) {
+                document.querySelectorAll('.card.selected').forEach(c => c.classList.remove('selected'));
+            }
+            
+            card.classList.add('selected');
+            selectedCards.push(card);
+            
+            if (selectedCards.length === 2) {
+                canSelect = false;
+                setTimeout(checkMatch, 1000);
+            }
+        }
+
+        function checkMatch() {
+            const [card1, card2] = selectedCards;
+            
+            if (card1.dataset.animal === card2.dataset.animal) {
+                card1.classList.remove('selected');
+                card2.classList.remove('selected');
+                card1.classList.add('matched');
+                card2.classList.add('matched');
+                matchedPairs++;
+                document.getElementById('matches').textContent = matchedPairs;
+                
+                if (matchedPairs === 18) {
+                    document.getElementById('animalComplete').style.display = 'block';
+                }
+            } else {
+                card1.classList.remove('selected');
+                card2.classList.remove('selected');
+            }
+            
+            selectedCards = [];
+            canSelect = true;
+        }
+
+        function restartAnimalGame() {
+            initAnimalGame();
+        }
+
+        // Clock Game Functions
+        function initClockGame() {
+            clockScore = 0;
+            document.getElementById('clockScore').textContent = '0';
+            generateNewTime();
+            initSpeechRecognition();
+        }
+
+        function generateNewTime() {
+            currentHour = Math.floor(Math.random() * 12) + 1;
+            currentMinute = Math.floor(Math.random() * 12) * 5; // 5-minute intervals
+            
+            updateClock();
+            document.getElementById('feedback').className = 'feedback neutral';
+            document.getElementById('feedback').textContent = 'Look at the clock and say the time out loud!';
+            document.getElementById('currentTime').textContent = formatTime(currentHour, currentMinute);
+        }
+
+        function updateClock() {
+            const hourHand = document.getElementById('hourHand');
+            const minuteHand = document.getElementById('minuteHand');
+            
+            const hourAngle = (currentHour % 12) * 30 + (currentMinute * 0.5);
+            const minuteAngle = currentMinute * 6;
+            
+            hourHand.style.transform = `rotate(${hourAngle}deg)`;
+            minuteHand.style.transform = `rotate(${minuteAngle}deg)`;
+        }
+
+        function formatTime(hour, minute) {
+            const h = hour === 0 ? 12 : hour;
+            const m = minute.toString().padStart(2, '0');
+            return `${h}:${m}`;
+        }
+
+        function initSpeechRecognition() {
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = 'en-US';
+                
+                recognition.onresult = function(event) {
+                    const spokenText = event.results[0][0].transcript.toLowerCase();
+                    checkTimeAnswer(spokenText);
+                };
+                
+                recognition.onerror = function(event) {
+                    console.error('Speech recognition error:', event.error);
+                    const feedback = document.getElementById('feedback');
+                    feedback.className = 'feedback incorrect';
+                    feedback.textContent = 'Could not hear you clearly. Please try again!';
+                    document.getElementById('voiceButton').classList.remove('listening');
+                    document.getElementById('voiceButton').disabled = false;
+                };
+                
+                recognition.onend = function() {
+                    document.getElementById('voiceButton').classList.remove('listening');
+                    document.getElementById('voiceButton').disabled = false;
+                };
+            } else {
+                const feedback = document.getElementById('feedback');
+                feedback.className = 'feedback incorrect';
+                feedback.textContent = 'Voice recognition is not supported in this browser. Please use Chrome or Edge.';
+                document.getElementById('voiceButton').disabled = true;
+            }
+        }
+
+        function startListening() {
+            if (!recognition) return;
+            
+            const button = document.getElementById('voiceButton');
+            button.classList.add('listening');
+            button.disabled = true;
+            
+            const feedback = document.getElementById('feedback');
+            feedback.className = 'feedback neutral';
+            feedback.textContent = 'Listening... Please say the time now!';
+            
+            recognition.start();
+        }
+
+        function checkTimeAnswer(spokenText) {
+            const correctTime = formatTime(currentHour, currentMinute);
+            const feedback = document.getElementById('feedback');
+            
+            // Parse spoken text for time
+            const timeRegex = /(\d{1,2})[:\s]?(\d{2})|(\d{1,2})\s*o'?clock/i;
+            const match = spokenText.match(timeRegex);
+            
+            let isCorrect = false;
+            
+            if (match) {
+                let spokenHour, spokenMinute;
+                
+                if (match[3]) {
+                    // "X o'clock" format
+                    spokenHour = parseInt(match[3]);
+                    spokenMinute = 0;
+                } else {
+                    // "X:XX" or "X XX" format
+                    spokenHour = parseInt(match[1]);
+                    spokenMinute = parseInt(match[2]);
+                }
+                
+                // Normalize 12-hour format
+                if (spokenHour === 0) spokenHour = 12;
+                if (spokenHour > 12) spokenHour = spokenHour % 12;
+                
+                isCorrect = (spokenHour === currentHour && spokenMinute === currentMinute);
+            }
+            
+            if (isCorrect) {
+                feedback.className = 'feedback correct';
+                feedback.textContent = `🎉 Correct! The time is ${correctTime}`;
+                clockScore++;
+                document.getElementById('clockScore').textContent = clockScore;
+                setTimeout(generateNewTime, 2000);
+            } else {
+                feedback.className = 'feedback incorrect';
+                feedback.textContent = `Not quite right. The correct time is ${correctTime}. Try the next one!`;
+                setTimeout(generateNewTime, 3000);
+            }
+        }
+
+        // Memory Game Functions
+        function initMemoryGame() {
+            memoryScore = 0;
+            document.getElementById('memoryScore').textContent = '0';
+            resetMemoryGame();
+        }
+
+        function resetMemoryGame() {
+            document.getElementById('memoryPhase').style.display = 'block';
+            document.getElementById('memoryCountdown').style.display = 'none';
+            document.getElementById('memoryItem').style.display = 'none';
+            document.getElementById('memoryQuestion').style.display = 'none';
+            document.getElementById('memoryFeedback').style.display = 'none';
+            document.getElementById('startMemoryRound').style.display = 'block';
+            
+            document.getElementById('memoryPhase').textContent = 'Get ready! You\'ll see a colored square for 3 seconds.';
+        }
+
+        function startMemoryRound() {
+            // Select random color
+            currentMemoryColor = colors[Math.floor(Math.random() * colors.length)];
+            
+            document.getElementById('startMemoryRound').style.display = 'none';
+            document.getElementById('memoryPhase').textContent = 'Remember the color of this square!';
+            
+            // Show countdown
+            document.getElementById('memoryCountdown').style.display = 'block';
+            let countdown = 3;
+            const countdownElement = document.getElementById('memoryCountdown');
+            
+            const countdownInterval = setInterval(() => {
+                countdownElement.textContent = countdown;
+                countdown--;
+                
+                if (countdown < 0) {
+                    clearInterval(countdownInterval);
+                    showMemoryItem();
+                }
+            }, 1000);
+        }
+
+        function showMemoryItem() {
+            document.getElementById('memoryCountdown').style.display = 'none';
+            document.getElementById('memoryPhase').style.display = 'none';
+            
+            const memoryItem = document.getElementById('memoryItem');
+            memoryItem.style.display = 'block';
+            memoryItem.textContent = ''; // No emoji, just colored square
+            memoryItem.style.backgroundColor = currentMemoryColor.hex;
+            
+            // Show for 3 seconds, then ask question
+            setTimeout(() => {
+                memoryItem.style.display = 'none';
+                showMemoryQuestion();
+            }, 3000);
+        }
+
+        function showMemoryQuestion() {
+            document.getElementById('memoryQuestion').style.display = 'block';
+            
+            // Create color options (correct answer plus 3 random wrong answers)
+            const colorOptions = document.getElementById('colorOptions');
+            colorOptions.innerHTML = '';
+            
+            const wrongColors = colors.filter(color => color.name !== currentMemoryColor.name);
+            const shuffledWrong = wrongColors.sort(() => 0.5 - Math.random()).slice(0, 3);
+            const allOptions = [currentMemoryColor, ...shuffledWrong].sort(() => 0.5 - Math.random());
+            
+            allOptions.forEach(color => {
+                const button = document.createElement('div');
+                button.className = 'color-button';
+                button.style.backgroundColor = color.hex;
+                button.style.color = 'white';
+                button.textContent = color.name;
+                button.onclick = () => checkMemoryAnswer(color.name);
+                colorOptions.appendChild(button);
+            });
+        }
+
+        function checkMemoryAnswer(selectedColor) {
+            const feedback = document.getElementById('memoryFeedback');
+            feedback.style.display = 'block';
+            document.getElementById('memoryQuestion').style.display = 'none';
+            
+            if (selectedColor === currentMemoryColor.name) {
+                feedback.className = 'feedback correct';
+                feedback.textContent = `🎉 Correct! The square was ${currentMemoryColor.name}!`;
+                memoryScore++;
+                document.getElementById('memoryScore').textContent = memoryScore;
+            } else {
+                feedback.className = 'feedback incorrect';
+                feedback.textContent = `Not quite right. The square was ${currentMemoryColor.name}. Try the next one!`;
+            }
+            
+            setTimeout(() => {
+                resetMemoryGame();
+            }, 3000);
+        }
+
+        // Initialize the app
+        window.onload = function() {
+            showMenu();
+        };
+    </script>
+</body>
+</html>
